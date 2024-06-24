@@ -12,8 +12,7 @@ their trips now you have to provide them the answers of their questions based on
 words:
 Try to make things more interactive and appropriate. """
 
-def generate_hello_message(query ):
+def generate_message(query ):
     model=genai.GenerativeModel("gemini-pro")
     response=model.generate_content(prompt + query)
     return response.text
-

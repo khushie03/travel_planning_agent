@@ -1,0 +1,19 @@
+import streamlit as st
+from chatbot  import generate_message
+def chat_app():
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    prompt = st.chat_input("Say something")
+    if prompt:
+        st.write(f"User has sent the following prompt: {prompt}")
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        response = generate_message(prompt)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        
+        with st.chat_message("assistant"):
+            st.markdown(response)
