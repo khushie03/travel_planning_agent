@@ -60,7 +60,7 @@ This Streamlit app allows users to search for flights and hotels using the Googl
 
 ## Configuration
 
-Ensure you have obtained an API key from [SerpApi](https://serpapi.com/) and replace `"YOUR_API_KEY"` in `app.py` with your actual API key.
+Ensure you have obtained an API key from [SerpApi](https://serpapi.com/) and replace `"YOUR_API_KEY"` in `main.py` with your actual API key.
 
   
 
