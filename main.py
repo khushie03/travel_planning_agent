@@ -1,12 +1,13 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from serpapi import GoogleSearch
-from functions import chat_app
+import os
+from functions import chat_app, create_html_file
 
 options = option_menu(
-    menu_title="none",
+    menu_title=None,
     options=["Flight Searcher", "Chatbot", "Hotel Searcher"],
-    icons=["chair", "info-circle", "link"],
+    icons=["airplane", "info-circle", "hotel"],
     orientation="horizontal",
 )
 
@@ -92,5 +93,83 @@ if options == "Flight Searcher":
         else:
             st.info("No flight details available.")
 
+
+def generate_hotel_card(hotel):
+    name = hotel['name']
+    description = hotel.get('description', 'No description available')
+    link = hotel.get('link', '#')
+    
+    rate_per_night = hotel.get('rate_per_night', {}).get('lowest', 'N/A')
+    check_in_time = hotel.get('check_in_time', 'N/A')
+    check_out_time = hotel.get('check_out_time', 'N/A')
+    images = hotel.get('images', [])
+    image_gallery = ""
+    for image in images:
+        thumbnail = image.get('thumbnail', '')
+        image_gallery += f'<img src="{thumbnail}" alt="{name} thumbnail" style="max-width:100px; margin:5px;">'
+    return f"""
+    <div class="hotel-card">
+        <h3>{name}</h3>
+        <div class="image-gallery">
+            {image_gallery}
+        </div>
+        <p><strong>Description:</strong> {description}</p>
+        <p><strong>Rate per Night:</strong> {rate_per_night}</p>
+        <p><strong>Check-in Time:</strong> {check_in_time}</p>
+        <p><strong>Check-out Time:</strong> {check_out_time}</p>
+        <p><a href="{link}">More details</a></p>
+    </div>
+    """
+
 if options == "Chatbot":
     chat_app()
+
+if options == "Hotel Searcher":
+    query = st.text_input("Enter your search query")
+    check_in_date = st.date_input("Enter the check-in date")
+    check_out_date = st.date_input("Enter the check-out date")
+    num_persons = st.number_input("Enter number of adults", min_value=1, step=1)
+    currency = st.selectbox("Select Currency", ["USD", "INR"])
+
+    if st.button("Search Hotels"):
+        params = {
+            "engine": "google_hotels",
+            "q": query,
+            "check_in_date": str(check_in_date),
+            "check_out_date": str(check_out_date),
+            "adults": num_persons,
+            "currency": currency,
+            "gl": "us",
+            "hl": "en",
+            "api_key": "c8b912a9727723424bffac813a03eb897d43cee8cfac0741c3b266a6cb8bef71"
+        }
+
+        search = GoogleSearch(params)
+        results = search.get_dict()
+
+        if 'properties' in results:
+            hotel_details = ""
+            for hotel in results['properties']:
+                hotel_details += generate_hotel_card(hotel)
+
+            st.markdown("""
+            <style>
+                .hotel-card {
+                    border: 1px solid #ccc;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                .hotel-card img {
+                    max-width: 100px;
+                    vertical-align: middle;
+                }
+                .hotel-card h3 {
+                    margin: 0;
+                    font-size: 1.2em;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+            st.markdown(hotel_details, unsafe_allow_html=True)
+        else:
+            st.info("No hotel details available.")
