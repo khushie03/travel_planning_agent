@@ -1,55 +1,96 @@
 import streamlit as st
-from PIL import Image
-from functions import chat_app()
-from chatbot import generate_message
-with open("style.css") as f:
-    st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
-st.write('''
-Travel Sensei
-''')
+from streamlit_option_menu import option_menu
+from serpapi import GoogleSearch
+from functions import chat_app
 
-image = Image.open('dp.jpg')
-st.image(image, width=150)
+options = option_menu(
+    menu_title="none",
+    options=["Flight Searcher", "Chatbot", "Hotel Searcher"],
+    icons=["chair", "info-circle", "link"],
+    orientation="horizontal",
+)
 
-st.markdown('Info', unsafe_allow_html=True)
-st.info('''
-Our platform is designed to be your ultimate companion in travel planning, offering 
-        a seamless experience for adventurers of all kinds. Whether you're dreaming of a quick getaway or embarking on a globe-trotting expedition, 
-        our tools and resources are here to simplify every step of your journey.
-''')
+def generate_flight_card(flight):
+    departure = flight['departure_airport']
+    arrival = flight['arrival_airport']
+    airline_logo = flight['airline_logo']
+    airline = flight['airline']
+    duration = flight['duration']
+    flight_number = flight['flight_number']
+    travel_class = flight['travel_class']
+    price = flight.get('price', 'N/A')
+    often_delayed = "Yes" if flight.get('often_delayed_by_over_30_min') else "No"
+    
+    return f"""
+    <div class="flight-card">
+        <h3>Flight {flight_number}</h3>
+        <img src="{airline_logo}" alt="{airline} logo">
+        <p><strong>Airline:</strong> {airline}</p>
+        <p><strong>Departure:</strong> {departure['name']} ({departure['id']}) at {departure['time']}</p>
+        <p><strong>Arrival:</strong> {arrival['name']} ({arrival['id']}) at {arrival['time']}</p>
+        <p><strong>Duration:</strong> {duration} minutes</p>
+        <p><strong>Travel Class:</strong> {travel_class}</p>
+        <p><strong>Price:</strong> {price}</p>
+        <p><strong>Often Delayed:</strong> {often_delayed}</p>
+    </div>
+    """
 
-st.markdown('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">', unsafe_allow_html=True)
+if options == "Flight Searcher":
+    onboard_date = st.date_input("Enter the onboard date")
+    return_date = st.date_input("Enter the return date")
+    currency = st.selectbox("Select Currency", ["USD", "INR"])
+    current_location = st.text_input("Enter your current location")
+    destination = st.text_input("Enter your destination")
 
-st.markdown("""
-<nav class="navbar fixed-top navbar-expand-lg navbar-dark" style="background-color: #16A2CB;">
-  <a class="navbar-brand" href="https://youtube.com/dataprofessor" target="_blank">Chanin Nantasenamat</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-  <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav">
-      <li class="nav-item active">
-        <a class="nav-link disabled" href="/">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#education">Education</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#work-experience">Work Experience</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#bioinformatics-tools">Bioinformatics Tools</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#social-media">Social Media</a>
-      </li>
-    </ul>
-  </div>
-</nav>
-""", unsafe_allow_html=True)
+    if st.button("Search Flights"):
+        params = {
+            "engine": "google_flights",
+            "departure_id": current_location,
+            "arrival_id": destination,
+            "outbound_date": str(onboard_date),
+            "return_date": str(return_date),
+            "currency": currency,
+            "hl": "en",
+            "api_key": "c8b912a9727723424bffac813a03eb897d43cee8cfac0741c3b266a6cb8bef71"
+        }
+        
+        search = GoogleSearch(params)
+        results = search.get_dict()
 
-st.markdown('''
-## Education
-''')
+        flight_details = ""
 
-chat_app()
+        if 'best_flights' in results:
+            for best_flight in results['best_flights']:
+                for flight in best_flight['flights']:
+                    flight_details += generate_flight_card(flight)
+
+        if 'other_flights' in results:
+            for other_flight in results['other_flights']:
+                for flight in other_flight['flights']:
+                    flight_details += generate_flight_card(flight)
+
+        if flight_details:
+            st.markdown("""
+            <style>
+                .flight-card {
+                    border: 1px solid #ccc;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                .flight-card img {
+                    max-width: 50px;
+                    vertical-align: middle;
+                }
+                .flight-card h3 {
+                    margin: 0;
+                    font-size: 1.2em;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+            st.markdown(flight_details, unsafe_allow_html=True)
+        else:
+            st.info("No flight details available.")
+
+if options == "Chatbot":
+    chat_app()
