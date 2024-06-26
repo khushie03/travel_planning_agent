@@ -52,7 +52,7 @@ if options == "Flight Searcher":
             "return_date": str(return_date),
             "currency": currency,
             "hl": "en",
-            "api_key": "c8b912a9727723424bffac813a03eb897d43cee8cfac0741c3b266a6cb8bef71"
+            "api_key": "YOUR_SERP_API_KEY"
         }
         
         search = GoogleSearch(params)
@@ -141,7 +141,7 @@ if options == "Hotel Searcher":
             "currency": currency,
             "gl": "us",
             "hl": "en",
-            "api_key": "c8b912a9727723424bffac813a03eb897d43cee8cfac0741c3b266a6cb8bef71"
+            "api_key": "YOUR_SERP_API_KEY"
         }
 
         search = GoogleSearch(params)
