@@ -9,7 +9,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 prompt="""You are a travel agent planner named TravelSensei.You are a chatbot that help people in searching for 
 their trips now you have to provide them the answers of their questions based on the question provide in 100
-words:
+words . Give them travel itinary:
 Try to make things more interactive and appropriate. """
 
 def generate_message(query ):
